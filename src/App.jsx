@@ -88,7 +88,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden select-none">
+    <div className="min-h-dvh w-full relative overflow-hidden select-none">
       {/* ── Background with Figma noise texture ── */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
@@ -99,10 +99,10 @@ export default function App() {
       </svg>
 
       {/* ── Content layer ── */}
-      <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center py-0 px-[20px] sm:px-[40px] md:px-[40px] gap-[40px] md:gap-[100px]">
+      <div className="relative z-10 min-h-dvh w-full flex flex-col items-center justify-center py-0 px-[20px] sm:px-[40px] md:px-[40px] gap-[25px] sm:gap-[40px] md:gap-[100px]">
 
         {/* Title */}
-        <h1 className="text-white text-center font-bogle select-none text-[65px] sm:text-[80px] md:text-[100px] leading-none">
+        <h1 className="text-white text-center font-bogle select-none text-[45px] sm:text-[65px] md:text-[100px] leading-none">
           DRAW IT!
         </h1>
 
@@ -148,7 +148,7 @@ export default function App() {
           disabled={isSpinning}
           onClick={handleSpin}
           className={clsx(
-            "w-full h-[80px] md:max-w-[350px] rounded-[40px] font-bayon text-[30px] tracking-wide text-white uppercase select-none",
+            "w-full h-[65px] md:h-[80px] md:max-w-[350px] rounded-full font-bayon text-[30px] tracking-wide text-white uppercase select-none",
             "flex items-center justify-center transition-colors duration-200",
             isSpinning
               ? "bg-[#30b257] cursor-not-allowed"

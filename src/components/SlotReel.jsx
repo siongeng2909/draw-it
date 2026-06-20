@@ -232,7 +232,7 @@ export default function SlotReel({
       className={clsx(
         "bg-white relative overflow-hidden rounded-[40px] select-none",
         isMobile
-          ? "h-[130px] w-full"
+          ? "h-[110px] w-full"
           : "h-[250px] lg:h-[200px] flex-1 max-w-[400px] min-w-[180px]"
       )}
     >
