@@ -99,7 +99,7 @@ export default function App() {
       </svg>
 
       {/* ── Content layer ── */}
-      <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-start pt-[60px] pb-[40px] px-[20px] sm:px-[40px] md:pt-[60px] md:pb-[60px] md:px-[40px] gap-[40px] md:gap-[100px]">
+      <div className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center py-0 px-[20px] sm:px-[40px] md:px-[40px] gap-[40px] md:gap-[100px]">
 
         {/* Title */}
         <h1 className="text-white text-center font-bogle select-none text-[65px] sm:text-[80px] md:text-[100px] leading-none">
