@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DRAW IT! - Drawing Prompt Generator</title>
+    <meta name="description" content="A slot machine drawing prompt generator. Spin for creative art prompts!" />
+
+    <!-- Google Fonts: Bayon (button font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bayon&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Noise texture SVG filter (from Figma design) -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
+      <defs>
+        <filter id="noise-filter" x="-5%" y="-5%" width="110%" height="110%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+          <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+          <feTurbulence type="fractalNoise" baseFrequency="0.83333331346511841 0.83333331346511841" stitchTiles="stitch" numOctaves="3" result="noise" seed="1440" />
+          <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+          <feComponentTransfer in="alphaNoise" result="coloredNoise1">
+            <feFuncA type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
+          </feComponentTransfer>
+          <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
+          <feComponentTransfer in="alphaNoise" result="coloredNoise2">
+            <feFuncA type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
+          </feComponentTransfer>
+          <feComposite operator="in" in2="shape" in="coloredNoise2" result="noise2Clipped" />
+          <feFlood flood-color="rgba(0, 0, 0, 0.25)" result="color1Flood" />
+          <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+          <feFlood flood-color="rgba(255, 255, 255, 0.08)" result="color2Flood" />
+          <feComposite operator="in" in2="noise2Clipped" in="color2Flood" result="color2" />
+          <feMerge result="noiseFinal">
+            <feMergeNode in="shape" />
+            <feMergeNode in="color1" />
+            <feMergeNode in="color2" />
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

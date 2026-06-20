@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@import "@fontsource/bbh-bogle";
+
+@theme {
+  --font-bogle: "BBH Bogle", system-ui, -apple-system, sans-serif;
+  --font-bayon: "Bayon", sans-serif;
+
+  --color-green-primary: #56ce7a;
+  --color-green-btn-active: #30b257;
+  --color-dark-btn: #1b1b1b;
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-bogle);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
