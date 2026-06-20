@@ -217,6 +217,36 @@ export default function SlotReel({
     onChangeIndex((currentIndex + 1) % items.length);
   }, [spinning, currentIndex, items.length, onChangeIndex]);
 
+  /* ── Touch gesture swipe handling for mobile ─────────────── */
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  const handleTouchStart = useCallback((e) => {
+    if (!isMobile || spinning) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, [isMobile, spinning]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!isMobile || spinning || touchStartX.current === null || touchStartY.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = Math.abs(touchStartY.current - touchEndY);
+    const threshold = 40; // px minimum swipe distance
+
+    // Check if swipe is horizontal and meets threshold
+    if (Math.abs(diffX) > threshold && Math.abs(diffX) > diffY) {
+      if (diffX > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  }, [isMobile, spinning, handleNext, handlePrev]);
+
   /* ── Render ──────────────────────────────────────────────── */
 
   const blurStyle =
@@ -229,6 +259,8 @@ export default function SlotReel({
 
   return (
     <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       className={clsx(
         "bg-white relative overflow-hidden rounded-[40px] select-none",
         isMobile
