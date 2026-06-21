@@ -25,6 +25,29 @@ function useIsMobile() {
   return isMobile;
 }
 
+/* ── Shake Icon ────────────────────────────────────────────────── */
+
+function ShakeIcon({ className }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M12 18h.01" />
+      <path d="M3 8a3.5 3.5 0 0 0 0 8" />
+      <path d="M21 8a3.5 3.5 0 0 1 0 8" />
+    </svg>
+  );
+}
+
 /* ── App ──────────────────────────────────────────────────────── */
 
 export default function App() {
@@ -43,6 +66,9 @@ export default function App() {
   const [showArrows, setShowArrows] = useState(true);
   const [ellipsis, setEllipsis] = useState("");
 
+  // Shake to spin permission state
+  const [shakeEnabled, setShakeEnabled] = useState(false);
+
   // Determine active lists based on difficulty
   const currentSubjects = difficulty === "easy" ? easySubjects : hardSubjects;
   const currentActions = difficulty === "easy" ? easyActions : hardActions;
@@ -57,12 +83,42 @@ export default function App() {
     return () => clearInterval(id);
   }, [isSpinning]);
 
+  // Function to request permission and enable shake
+  const enableShake = useCallback(async () => {
+    if (typeof DeviceMotionEvent === "undefined") return;
+
+    if (typeof DeviceMotionEvent.requestPermission === "function") {
+      try {
+        const response = await DeviceMotionEvent.requestPermission();
+        if (response === "granted") {
+          setShakeEnabled(true);
+          localStorage.setItem("shakeEnabled", "true");
+        }
+      } catch (err) {
+        console.error("DeviceMotion permission error:", err);
+      }
+    } else {
+      setShakeEnabled(true);
+      localStorage.setItem("shakeEnabled", "true");
+    }
+  }, []);
+
   // SPIN handler
   const handleSpin = useCallback(() => {
     if (isSpinning) return;
 
     setIsSpinning(true);
     setShowArrows(false); // instant hide
+
+    // Trigger haptic feedback if supported
+    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      navigator.vibrate(80);
+    }
+
+    // Attempt to auto-enable shake on user interaction (so iOS Safari prompts on first SPIN click)
+    if (!shakeEnabled && typeof DeviceMotionEvent !== "undefined") {
+      enableShake().catch(() => {});
+    }
 
     // Generate random target index, excluding index 0 (the placeholder)
     const t1 = Math.floor(Math.random() * (currentSubjects.length - 1)) + 1;
@@ -79,7 +135,64 @@ export default function App() {
       setSlotTargets([null, null, null]);
       setShowArrows(true); // smooth fade in
     }, 3800);
-  }, [isSpinning, currentSubjects, currentActions, currentLocations]);
+  }, [isSpinning, currentSubjects, currentActions, currentLocations, shakeEnabled, enableShake]);
+
+  // Try to auto-enable shake on load (only works on Android/non-iOS where permission request is not needed)
+  useEffect(() => {
+    const saved = localStorage.getItem("shakeEnabled");
+    if (saved === "true") {
+      if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission !== "function") {
+        setShakeEnabled(true);
+      }
+    }
+  }, []);
+
+  // Listen for device shake
+  useEffect(() => {
+    if (!shakeEnabled || isSpinning) return;
+
+    const SHAKE_THRESHOLD = 15;
+    const SHAKE_COOLDOWN = 4500; // cooldown longer than spin sequence to prevent double triggers
+    let lastShake = 0;
+    let lastX = null, lastY = null, lastZ = null;
+
+    const handleMotion = (event) => {
+      const acc = event.acceleration;
+      if (acc && acc.x !== null && acc.y !== null && acc.z !== null) {
+        const total = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+        if (total > SHAKE_THRESHOLD) {
+          const now = Date.now();
+          if (now - lastShake > SHAKE_COOLDOWN) {
+            lastShake = now;
+            handleSpin();
+          }
+        }
+      } else {
+        const accG = event.accelerationIncludingGravity;
+        if (accG && accG.x !== null && accG.y !== null && accG.z !== null) {
+          if (lastX !== null && lastY !== null && lastZ !== null) {
+            const dx = accG.x - lastX;
+            const dy = accG.y - lastY;
+            const dz = accG.z - lastZ;
+            const total = Math.sqrt(dx ** 2 + dy ** 2 + dz ** 2);
+            if (total > SHAKE_THRESHOLD) {
+              const now = Date.now();
+              if (now - lastShake > SHAKE_COOLDOWN) {
+                lastShake = now;
+                handleSpin();
+              }
+            }
+          }
+          lastX = accG.x;
+          lastY = accG.y;
+          lastZ = accG.z;
+        }
+      }
+    };
+
+    window.addEventListener("devicemotion", handleMotion);
+    return () => window.removeEventListener("devicemotion", handleMotion);
+  }, [shakeEnabled, isSpinning, handleSpin]);
 
   // Listen for Space bar key press
   useEffect(() => {
@@ -212,21 +325,38 @@ export default function App() {
           />
         </div>
 
-        {/* SPIN Button */}
-        <button
-          disabled={isSpinning}
-          onClick={handleSpin}
-          className={clsx(
-            "w-full h-[80px] md:max-w-[350px] rounded-[40px] font-bayon text-[30px] tracking-wide text-white uppercase select-none",
-            "flex items-center justify-center transition-colors duration-200",
-            isSpinning
-              ? "bg-[#30b257] cursor-not-allowed"
-              : "bg-[#1b1b1b] hover:bg-black active:bg-black cursor-pointer"
+        {/* SPIN Button & Shake wrapper */}
+        <div className="w-full flex flex-col items-center gap-[12px] md:max-w-[350px]">
+          <button
+            disabled={isSpinning}
+            onClick={handleSpin}
+            className={clsx(
+              "w-full h-[80px] rounded-[40px] font-bayon text-[30px] tracking-wide text-white uppercase select-none",
+              "flex items-center justify-center transition-colors duration-200",
+              isSpinning
+                ? "bg-[#30b257] cursor-not-allowed"
+                : "bg-[#1b1b1b] hover:bg-black active:bg-black cursor-pointer"
+            )}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+          >
+            {isSpinning ? `SPINNING ${ellipsis}` : "SPIN!"}
+          </button>
+
+          {isMobile && typeof DeviceMotionEvent !== "undefined" && (
+            <button
+              onClick={enableShake}
+              disabled={isSpinning}
+              className={clsx(
+                "text-[#e0e0e0] font-bayon text-[14px] uppercase tracking-wider flex items-center gap-[6px] transition-all focus:outline-none",
+                isSpinning ? "opacity-40 cursor-not-allowed" : "opacity-80 hover:opacity-100 cursor-pointer"
+              )}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <ShakeIcon className={clsx(shakeEnabled && "text-[#56ce7a] animate-pulse")} />
+              {shakeEnabled ? "SHAKE TO SPIN ACTIVE" : "TAP TO ACTIVATE SHAKE TO SPIN"}
+            </button>
           )}
-          style={{ WebkitTapHighlightColor: "transparent" }}
-        >
-          {isSpinning ? `SPINNING ${ellipsis}` : "SPIN!"}
-        </button>
+        </div>
       </div>
     </div>
   );
