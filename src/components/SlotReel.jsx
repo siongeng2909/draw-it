@@ -123,85 +123,71 @@ export default function SlotReel({
     setReelItems(seq);
     setSpinning(true);
 
-    // Delay start so React has time to render the reel items
-    const timer = setTimeout(() => {
-      if (!mountedRef.current) return;
+    // Reset controls to match initial styles before starting the animation
+    if (isMobile) {
+      controls.set({ x: "0%", y: 0 });
+    } else {
+      controls.set({ x: 0, y: "-95%" });
+    }
 
-      const el = containerRef.current;
-      if (!el) return;
-      const size = isMobile ? el.offsetWidth : el.offsetHeight;
-      const totalDist = -(REEL_COUNT - 1) * size;
+    // Blur animation (ramp → hold → fade)
+    const blurAnim = animate(0, 1, {
+      keyframes: [0, 6, 6, 0],
+      times: [0, 0.2, 0.7, 1],
+      duration: 3,
+      delay,
+      ease: "easeInOut",
+      onUpdate: (v) => {
+        if (mountedRef.current) setBlurAmount(v);
+      },
+    });
 
-      // Reset position
-      if (isMobile) {
-        controls.set({ x: 0 });
-      } else {
-        // Start translated down to show the current item at the bottom of the sequence
-        controls.set({ y: totalDist });
-      }
-
-      // Blur animation (ramp → hold → fade)
-      animate(0, 1, {
-        keyframes: [0, 6, 6, 0],
-        times: [0, 0.2, 0.7, 1],
-        duration: 3,
-        delay,
-        ease: "easeInOut",
-        onUpdate: (v) => {
-          if (mountedRef.current) setBlurAmount(v);
-        },
-      });
-
-      // Position animation
-      if (isMobile) {
-        controls
-          .start({
-            x: totalDist,
-            transition: {
-              duration: 3,
-              delay,
-              ease: [0.32, 0.05, 0.12, 1],
-            },
-          })
-          .then(() => {
-            if (!mountedRef.current) return;
-            setSpinning(false);
-            setBlurAmount(0);
-            setReelItems([]);
-            controls.set({ x: 0, y: 0 });
-            onChangeIndex(targetIndex);
-          });
-      } else {
-        // Animate up to 0 to shift the track downwards (showing targetIndex at the top)
-        controls
-          .start({
-            y: 0,
-            transition: {
-              duration: 3,
-              delay,
-              ease: [0.32, 0.05, 0.12, 1],
-            },
-          })
-          .then(() => {
-            if (!mountedRef.current) return;
-            setSpinning(false);
-            setBlurAmount(0);
-            setReelItems([]);
-            controls.set({ x: 0, y: 0 });
-            onChangeIndex(targetIndex);
-          });
-      }
-    }, 60);
+    // Position animation
+    if (isMobile) {
+      controls
+        .start({
+          x: "-95%",
+          transition: {
+            duration: 3,
+            delay,
+            ease: [0.32, 0.05, 0.12, 1],
+          },
+        })
+        .then(() => {
+          if (!mountedRef.current) return;
+          setSpinning(false);
+          setBlurAmount(0);
+          setReelItems([]);
+          onChangeIndex(targetIndex);
+        });
+    } else {
+      controls
+        .start({
+          y: "0%",
+          transition: {
+            duration: 3,
+            delay,
+            ease: [0.32, 0.05, 0.12, 1],
+          },
+        })
+        .then(() => {
+          if (!mountedRef.current) return;
+          setSpinning(false);
+          setBlurAmount(0);
+          setReelItems([]);
+          onChangeIndex(targetIndex);
+        });
+    }
 
     // Cleanup resets everything (handles StrictMode double-invoke)
     return () => {
-      clearTimeout(timer);
+      blurAnim.stop();
       controls.stop();
       setSpinning(false);
       setReelItems([]);
       setBlurAmount(0);
     };
-  }, [isSpinning, targetIndex]);
+  }, [isSpinning, targetIndex, isMobile, items, delay, onChangeIndex, controls]);
 
   /* ── Manual stepping with direction tracking ─────────────── */
 
@@ -340,6 +326,8 @@ export default function SlotReel({
               height: "100%",
               display: "flex",
               flexDirection: isMobile ? "row" : "column",
+              x: isMobile ? "0%" : 0,
+              y: isMobile ? 0 : "-95%",
             }}
           >
             {reelItems.map((item, idx) => (
