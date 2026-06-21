@@ -87,9 +87,17 @@ export default function SlotReel({
   const [blurAmount, setBlurAmount] = useState(0);
   const [slideDir, setSlideDir] = useState(1); // 1 = next, -1 = prev
 
-  // Stable ref to currentIndex for async callbacks
+  // Stable ref to values for async callbacks to prevent unnecessary dependency triggers
   const currentIndexRef = useRef(currentIndex);
   currentIndexRef.current = currentIndex;
+
+  const onChangeIndexRef = useRef(onChangeIndex);
+  onChangeIndexRef.current = onChangeIndex;
+
+  const targetIndexRef = useRef(targetIndex);
+  targetIndexRef.current = targetIndex;
+
+  const targetPercent = `-${100 - 100 / REEL_COUNT}%`;
 
   // Track unmount
   useEffect(() => {
@@ -145,7 +153,7 @@ export default function SlotReel({
     if (isMobile) {
       controls
         .start({
-          x: "-95%",
+          x: targetPercent,
           transition: {
             duration: 3,
             delay,
@@ -157,7 +165,7 @@ export default function SlotReel({
           setSpinning(false);
           setBlurAmount(0);
           setReelItems([]);
-          onChangeIndex(targetIndex);
+          onChangeIndexRef.current(targetIndexRef.current);
         });
     } else {
       controls
@@ -174,7 +182,7 @@ export default function SlotReel({
           setSpinning(false);
           setBlurAmount(0);
           setReelItems([]);
-          onChangeIndex(targetIndex);
+          onChangeIndexRef.current(targetIndexRef.current);
         });
     }
 
@@ -182,7 +190,7 @@ export default function SlotReel({
       blurAnim.stop();
       controls.stop();
     };
-  }, [spinning, isMobile, delay, controls, onChangeIndex, targetIndex]);
+  }, [spinning, isMobile, delay, controls]);
 
   /* ── Manual stepping with direction tracking ─────────────── */
 
@@ -314,15 +322,15 @@ export default function SlotReel({
             animate={controls}
             initial={{
               x: isMobile ? "0%" : 0,
-              y: isMobile ? 0 : "-95%",
+              y: isMobile ? 0 : targetPercent,
             }}
             style={{
               ...blurStyle,
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100%",
-              height: "100%",
+              width: isMobile ? `${REEL_COUNT * 100}%` : "100%",
+              height: isMobile ? "100%" : `${REEL_COUNT * 100}%`,
               display: "flex",
               flexDirection: isMobile ? "row" : "column",
             }}
@@ -331,8 +339,8 @@ export default function SlotReel({
               <div
                 key={idx}
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: isMobile ? `${100 / REEL_COUNT}%` : "100%",
+                  height: isMobile ? "100%" : `${100 / REEL_COUNT}%`,
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
