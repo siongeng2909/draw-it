@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import clsx from "clsx";
 import SlotReel from "./components/SlotReel";
-import { subjects, actions, styles } from "./data/prompts";
+import {
+  easySubjects,
+  easyActions,
+  easyLocation,
+  hardSubjects,
+  hardActions,
+  hardLocation,
+} from "./data/prompts";
 
 /* ── Responsive hook ──────────────────────────────────────────── */
 
@@ -22,6 +30,9 @@ function useIsMobile() {
 export default function App() {
   const isMobile = useIsMobile();
 
+  // Difficulty mode: "easy" or "hard"
+  const [difficulty, setDifficulty] = useState("easy");
+
   // Slot indices — defaults set to 0 to show Who, What, Where on load
   const [indices, setIndices] = useState([0, 0, 0]);
 
@@ -31,6 +42,11 @@ export default function App() {
   const [slotSpinnings, setSlotSpinnings] = useState([false, false, false]);
   const [showArrows, setShowArrows] = useState(true);
   const [ellipsis, setEllipsis] = useState("");
+
+  // Determine active lists based on difficulty
+  const currentSubjects = difficulty === "easy" ? easySubjects : hardSubjects;
+  const currentActions = difficulty === "easy" ? easyActions : hardActions;
+  const currentLocations = difficulty === "easy" ? easyLocation : hardLocation;
 
   // Animated ellipsis during spin
   useEffect(() => {
@@ -49,9 +65,9 @@ export default function App() {
     setShowArrows(false); // instant hide
 
     // Generate random target index, excluding index 0 (the placeholder)
-    const t1 = Math.floor(Math.random() * (subjects.length - 1)) + 1;
-    const t2 = Math.floor(Math.random() * (actions.length - 1)) + 1;
-    const t3 = Math.floor(Math.random() * (styles.length - 1)) + 1;
+    const t1 = Math.floor(Math.random() * (currentSubjects.length - 1)) + 1;
+    const t2 = Math.floor(Math.random() * (currentActions.length - 1)) + 1;
+    const t3 = Math.floor(Math.random() * (currentLocations.length - 1)) + 1;
 
     setSlotTargets([t1, t2, t3]);
     setSlotSpinnings([true, true, true]);
@@ -63,7 +79,7 @@ export default function App() {
       setSlotTargets([null, null, null]);
       setShowArrows(true); // smooth fade in
     }, 3800);
-  }, [isSpinning]);
+  }, [isSpinning, currentSubjects, currentActions, currentLocations]);
 
   // Listen for Space bar key press
   useEffect(() => {
@@ -77,6 +93,13 @@ export default function App() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleSpin]);
+
+  // Difficulty toggle handler
+  const handleDifficultyChange = useCallback((mode) => {
+    if (isSpinning) return;
+    setDifficulty(mode);
+    setIndices([0, 0, 0]); // reset reels to placeholders on mode change
+  }, [isSpinning]);
 
   // Manual index change from arrow buttons
   const handleIndexChange = useCallback((slotIdx, newIndex) => {
@@ -101,16 +124,62 @@ export default function App() {
       {/* ── Content layer ── */}
       <div className="relative z-10 min-h-dvh w-full flex flex-col items-center justify-center py-0 px-[20px] sm:px-[40px] md:px-[40px] gap-[40px] md:gap-[100px]">
 
-        {/* Title */}
-        <h1 className="text-white text-center font-bogle select-none text-[80px] sm:text-[80px] md:text-[100px] leading-none">
-          DRAW IT!
-        </h1>
+        {/* Title & Toggle wrapper to group top elements */}
+        <div className="flex flex-col items-center gap-[20px] md:gap-[40px]">
+          {/* Title */}
+          <h1 className="text-white text-center font-bogle select-none text-[80px] sm:text-[80px] md:text-[100px] leading-none">
+            DRAW IT!
+          </h1>
+
+          {/* Mode Toggle */}
+          <div 
+            onClick={() => handleDifficultyChange(difficulty === "easy" ? "hard" : "easy")}
+            className={clsx(
+              "bg-[#141414] h-[40px] w-[190px] rounded-[20px] relative flex items-center p-[4px] cursor-pointer select-none shrink-0",
+              isSpinning && "opacity-60 cursor-not-allowed"
+            )}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+          >
+            {/* Active Pill slider */}
+            <motion.div 
+              className="absolute bg-white h-[32px] rounded-[16px] w-[91px] left-[4px]"
+              animate={{ x: difficulty === "easy" ? 0 : 91 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            />
+            
+            {/* EASY button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDifficultyChange("easy"); }}
+              disabled={isSpinning}
+              className={clsx(
+                "absolute left-[4px] top-[4px] h-[32px] w-[91px] flex items-center justify-center font-bayon text-[17px] tracking-wide uppercase select-none transition-colors duration-200 cursor-pointer focus:outline-none",
+                difficulty === "easy" ? "text-[#141414]" : "text-[#a6a6a6]"
+              )}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              EASY
+            </button>
+            
+            {/* HARD button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDifficultyChange("hard"); }}
+              disabled={isSpinning}
+              className={clsx(
+                "absolute left-[95px] top-[4px] h-[32px] w-[91px] flex items-center justify-center font-bayon text-[17px] tracking-wide uppercase select-none transition-colors duration-200 cursor-pointer focus:outline-none",
+                difficulty === "hard" ? "text-[#141414]" : "text-[#a6a6a6]"
+              )}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              HARD
+            </button>
+          </div>
+        </div>
 
         {/* Slots */}
         <div className="flex flex-col md:flex-row gap-[10px] items-center justify-center w-full max-w-[1220px]">
           <SlotReel
             slotIndex={0}
-            items={subjects}
+            items={currentSubjects}
             currentIndex={indices[0]}
             onChangeIndex={(v) => handleIndexChange(0, v)}
             isSpinning={slotSpinnings[0]}
@@ -121,7 +190,7 @@ export default function App() {
           />
           <SlotReel
             slotIndex={1}
-            items={actions}
+            items={currentActions}
             currentIndex={indices[1]}
             onChangeIndex={(v) => handleIndexChange(1, v)}
             isSpinning={slotSpinnings[1]}
@@ -132,7 +201,7 @@ export default function App() {
           />
           <SlotReel
             slotIndex={2}
-            items={styles}
+            items={currentLocations}
             currentIndex={indices[2]}
             onChangeIndex={(v) => handleIndexChange(2, v)}
             isSpinning={slotSpinnings[2]}
