@@ -69,7 +69,7 @@ export default function App() {
 
     // Trigger haptic feedback if supported
     if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-      navigator.vibrate(80);
+      navigator.vibrate(160);
     }
 
     // Generate random target index, excluding index 0 (the placeholder)
