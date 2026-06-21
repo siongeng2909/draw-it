@@ -102,7 +102,7 @@ export default function App() {
       <div className="relative z-10 min-h-dvh w-full flex flex-col items-center justify-center py-0 px-[20px] sm:px-[40px] md:px-[40px] gap-[40px] md:gap-[100px]">
 
         {/* Title */}
-        <h1 className="text-white text-center font-bogle select-none text-[65px] sm:text-[80px] md:text-[100px] leading-none">
+        <h1 className="text-white text-center font-bogle select-none text-[80px] sm:text-[80px] md:text-[100px] leading-none">
           DRAW IT!
         </h1>
 
