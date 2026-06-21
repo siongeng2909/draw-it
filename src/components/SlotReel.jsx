@@ -99,6 +99,7 @@ export default function SlotReel({
 
   /* ── Spin animation ──────────────────────────────────────── */
 
+  // 1. Prepare spin data and mount the reel track
   useEffect(() => {
     if (!isSpinning || targetIndex === null) return;
 
@@ -122,13 +123,11 @@ export default function SlotReel({
 
     setReelItems(seq);
     setSpinning(true);
+  }, [isSpinning, targetIndex, isMobile, items]);
 
-    // Reset controls to match initial styles before starting the animation
-    if (isMobile) {
-      controls.set({ x: "0%", y: 0 });
-    } else {
-      controls.set({ x: 0, y: "-95%" });
-    }
+  // 2. Animate the reel track once it is mounted and bound to controls
+  useEffect(() => {
+    if (!spinning) return;
 
     // Blur animation (ramp → hold → fade)
     const blurAnim = animate(0, 1, {
@@ -179,15 +178,11 @@ export default function SlotReel({
         });
     }
 
-    // Cleanup resets everything (handles StrictMode double-invoke)
     return () => {
       blurAnim.stop();
       controls.stop();
-      setSpinning(false);
-      setReelItems([]);
-      setBlurAmount(0);
     };
-  }, [isSpinning, targetIndex, isMobile, items, delay, onChangeIndex, controls]);
+  }, [spinning, isMobile, delay, controls, onChangeIndex, targetIndex]);
 
   /* ── Manual stepping with direction tracking ─────────────── */
 
@@ -317,6 +312,10 @@ export default function SlotReel({
         {spinning && (
           <motion.div
             animate={controls}
+            initial={{
+              x: isMobile ? "0%" : 0,
+              y: isMobile ? 0 : "-95%",
+            }}
             style={{
               ...blurStyle,
               position: "absolute",
@@ -326,8 +325,6 @@ export default function SlotReel({
               height: "100%",
               display: "flex",
               flexDirection: isMobile ? "row" : "column",
-              x: isMobile ? "0%" : 0,
-              y: isMobile ? 0 : "-95%",
             }}
           >
             {reelItems.map((item, idx) => (
