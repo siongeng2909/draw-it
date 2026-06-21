@@ -336,7 +336,8 @@ export default function SlotReel({
               position: "absolute",
               top: 0,
               left: 0,
-              height: isMobile ? "100%" : "auto",
+              width: "100%",
+              height: "100%",
               display: "flex",
               flexDirection: isMobile ? "row" : "column",
             }}
@@ -345,12 +346,8 @@ export default function SlotReel({
               <div
                 key={idx}
                 style={{
-                  width: isMobile
-                    ? containerRef.current?.offsetWidth ?? 300
-                    : "100%",
-                  height: isMobile
-                    ? "100%"
-                    : containerRef.current?.offsetHeight ?? 250,
+                  width: "100%",
+                  height: "100%",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
