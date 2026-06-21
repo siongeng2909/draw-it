@@ -67,11 +67,6 @@ export default function App() {
     setIsSpinning(true);
     setShowArrows(false); // instant hide
 
-    // Trigger haptic feedback if supported
-    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-      navigator.vibrate(160);
-    }
-
     // Generate random target index, excluding index 0 (the placeholder)
     const t1 = Math.floor(Math.random() * (currentSubjects.length - 1)) + 1;
     const t2 = Math.floor(Math.random() * (currentActions.length - 1)) + 1;
@@ -116,6 +111,10 @@ export default function App() {
           const now = Date.now();
           if (now - lastShake > SHAKE_COOLDOWN) {
             lastShake = now;
+            // Trigger haptic feedback if supported on shake
+            if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+              navigator.vibrate(160);
+            }
             handleSpin();
           }
         }
@@ -131,6 +130,10 @@ export default function App() {
               const now = Date.now();
               if (now - lastShake > SHAKE_COOLDOWN) {
                 lastShake = now;
+                // Trigger haptic feedback if supported on shake
+                if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+                  navigator.vibrate(160);
+                }
                 handleSpin();
               }
             }
